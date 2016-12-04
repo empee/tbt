@@ -1,0 +1,115 @@
+#! /usr/bin/env node
+
+// -*- js -*-
+
+var tbtBuild = require('../src/tbtBuild.js');
+var fs = require('fs');
+var path = require('path');
+
+var args = require('yargs')
+  .usage('$0 <options> path or file(s)')
+  .option('output', {
+    alias: 'o',
+    describe: 'output file',
+    type: 'string',
+  })
+  .option('no-minify', {
+    alias: 'n',
+    describe: 'by default templates are minified via uglify-js',
+    type: 'boolean',
+  })
+  .option('recursive', {
+    alias: 'r',
+    describe: 'recursively look in subdirectories',
+    type: 'boolean',
+  })
+  .option('helpers', {
+    describe: 'load custom helpers from file',
+    type: 'string',
+  })
+  .options('full-version', {
+    alias: 'f',
+    describe: 'includes the full tbt in build, meaning that compiled version will have compiler included',
+    type: 'boolean',
+  })
+  .options('clone-objects', {
+    alias: 'c',
+    describe: 'set clone mode to true so templates wont change incoming data',
+    type: 'boolean',
+  })
+  .option('root', {
+    describe: 'sets root path of templates, all included templates/directories *should* be under this root or something funky will happen',
+    type: 'string',
+  })
+  .demand(1)
+  .argv;
+
+if (args._.length < 1) {
+  console.log('We need at least one file or path');
+  process.exit();
+}
+
+function handleFile(root, file, recursive) {
+  var files = [];
+  var s = fs.statSync(root + (file === '' ? '' : '/' + file));
+
+  if (s.isFile()) {
+    if (path.extname(file) === '.tbt') {
+      files.push({ name: root + file, content: fs.readFileSync(root + file).toString('utf8') });
+    }
+  } else if (s.isDirectory()) {
+    if (recursive === null || recursive === true) {
+      fs.readdirSync(root + '/' + file).forEach(function (fName) {
+        handleFile(root, file + '/' + fName, (recursive === null) ? args.recursive : recursive)
+          .forEach(function (_file) {
+            files.push(_file);
+          });
+      });
+    }
+  }
+
+  return files;
+}
+
+function fetchFiles(root) {
+  var files = [];
+  args._.forEach(function (arg) {
+    if (!root) {
+      var parsed = path.parse(path.resolve(arg));
+      root = parsed.dir + (parsed.ext === '' ? '/' + parsed.base : '');
+    }
+
+    var file = path.relative(root, path.resolve(arg));
+    if (file !== '' && file[0] !== '/') file = '/' + file;
+    try {
+      handleFile(root, file, null).forEach(function (file) {
+        files.push({
+          name: file.name.replace(root + '/', '').replace(/\.tbt$/, ''),
+          content: file.content,
+        });
+      });
+    } catch (e) {
+      console.log(e);
+      process.exit();
+    }
+  });
+
+  return files;
+}
+
+var files = fetchFiles(args.root);
+var options = {
+  noMinify: args.noMinify ? true : false,
+  helpers: args.helpers ? path.resolve(args.helpers) : undefined,
+  customLoader: args.fullVersion ? fs.readFileSync(path.resolve(__dirname + '/../src/tbt.js')).toString('utf8') : undefined,
+  clone: args.clone ? true : false,
+};
+
+var build = tbtBuild(files, options);
+if (args.output) {
+  fs.writeFileSync(args.output, build);
+  console.log('All done.');
+} else {
+  console.log(build);
+}
+

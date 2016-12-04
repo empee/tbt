@@ -1,0 +1,20 @@
+{{<colorsPartial}}
+Colors {{name}} likes: 
+	{{#each colors~}} 
+	{{this}}{{#if !$last}}, {{/if~}}
+	{{/each}}
+{{/colorsPartial}}
+{{<animalsPartial}}
+Animals {{name}} likes:
+	{{#each animals~}}
+	{{#if $last}}
+	 and 
+    *** {{else if !$first~}}, {{~/if~}}{{this~}}
+	{{~#if $last}} ***{{/if~}}
+	{{~/each}}
+{{/animalsPartial~}}
+
+{{#each people~}}
+	{{~#if colors}}{{>colorsPartial}}{{/if~}} 
+	{{~#if animals}}{{>animalsPartial}}{{/if~}}
+{{/each}}

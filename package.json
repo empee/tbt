@@ -1,0 +1,37 @@
+{
+	"name": "tbt",
+	"version": "0.1.0",
+	"description": "mostly handlebars compatible template engine with logic",
+    "keywords": [
+        "template",
+        "templating",
+        "handlebars"
+    ],
+	"licence": "MIT",
+	"repository": {
+		"type": "git",
+		"url": "https://github.com/empee/tbt.git"
+	},
+    "homepage": "https://github.com/empee/tbt",
+    "author": {
+        "name": "markus parkkonen",
+        "email": "markus.parkkonen@gmail.com"
+    },
+    "bin": "bin/tbt",
+	"main": "src/tbt.js",
+	"dependencies": {
+		"uglify-js": "^2.7.x",
+        "yargs": "^6.5.0"
+	},
+	"devDependencies": {
+		"chai": "^3.5.x",
+		"mocha": "^2.5.x"
+	},
+    "engines": {
+        "node": ">=0.12.0"
+    },
+    "scripts": {
+        "minify": "uglifyjs src/tbt.js -o src/tbt.min.js -c -m --reserved '$,$o' --preamble '/* https://github.com/empee/tbt */'",
+        "prepublish": "npm run minify"
+    }
+}

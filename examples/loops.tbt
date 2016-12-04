@@ -1,0 +1,15 @@
+{{#each people}}
+	{{@name}} {{@lastname}}
+    {{#if doesntLikeFood == true}}
+    Doesn't like food
+    {{else}}
+	Favorite foods:
+	{{#each favoriteFoods}}
+		{{#if name}}
+		{{name}} {{#if how}}{{how}}{{else if toppings}} with {{#each toppings}}{{this}} {{/each}}{{/if}}
+		{{else}}
+		{{this}}
+		{{/if}}
+	{{/each}}
+    {{/if}}
+{{/each}}
